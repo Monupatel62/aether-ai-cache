@@ -1,6 +1,6 @@
 # Repository specification: aether-ai-cache
 
-**Status:** Documentation baseline copied from the Aether AI master specification. Implementation status must be verified separately.
+**Status:** Repository exists; documentation-only on the inspected `main` branch. No application implementation is present in the audited tree.
 
 ## Mission
 
@@ -8,7 +8,7 @@ Cache interfaces, key conventions, TTL, invalidation, and tenant-aware cache hel
 
 ## Dependencies and connections
 
-API, gateway, search, database.
+Selected cache backend adapter only; cache holds reconstructible data and never authorizes access or owns durable state.
 
 ## Owned capabilities
 
