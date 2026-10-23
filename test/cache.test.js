@@ -16,7 +16,7 @@ test("sets and reads reconstructible values with tenant-scoped keys", async () =
   const { cache, values } = fixture();
   await cache.set({ tenantId: "tenant-a", key: "profile:summary", value: { count: 3 }, ttlSeconds: 30, reconstructible: true });
   assert.deepEqual(await cache.get({ tenantId: "tenant-a", key: "profile:summary" }), { count: 3 });
-  assert.equal(values.has("aether:tenant-a:profile:summary"), true);
+  assert.equal(values.has("aether:tenant-a:profile%3Asummary"), true);
   assert.equal(await cache.get({ tenantId: "tenant-b", key: "profile:summary" }), null);
 });
 
@@ -39,4 +39,19 @@ test("enforces serialized value limits and hides backend errors", async () => {
   await assert.rejects(cache.set({ tenantId: "tenant-a", key: "key", value: { text: "x".repeat(100) }, reconstructible: true }), (e) => e.code === "value_too_large");
   const broken = fixture({ adapter: { get: async () => { throw new Error("backend private details"); }, set: async () => {}, delete: async () => {} } }).cache;
   await assert.rejects(broken.get({ tenantId: "tenant-a", key: "key" }), (e) => e.code === "backend_unavailable" && !e.message.includes("private"));
+});
+
+
+test("encodes key segments so delimiter-containing tenant ids cannot collide", async () => {
+  const values = new Map();
+  const adapter = {
+    async get(key) { return values.get(key) ?? null; },
+    async set(key, value) { values.set(key, value); },
+    async delete(key) { values.delete(key); },
+  };
+  const first = createCache({ adapter, namespace: "a:b" });
+  const second = createCache({ adapter, namespace: "a" });
+  await first.set({ tenantId: "c", key: "d", value: { secretFor: "c" }, reconstructible: true });
+  assert.deepEqual(await second.get({ tenantId: "b:c", key: "d" }), null);
+  assert.deepEqual(await first.get({ tenantId: "c", key: "d" }), { secretFor: "c" });
 });
