@@ -13,7 +13,7 @@ export function createCache({ adapter, namespace, defaultTtlSeconds = 60, maxTtl
 
   function storageKey(tenantId, key) {
     if (!valid(tenantId) || !valid(key)) throw new CacheError("invalid_key");
-    return `${namespace}:${tenantId}:${key}`;
+    return `${encodeURIComponent(namespace)}:${encodeURIComponent(tenantId)}:${encodeURIComponent(key)}`;
   }
 
   return Object.freeze({
